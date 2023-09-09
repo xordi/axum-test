@@ -1,6 +1,6 @@
 # axum-test
 
-This app is just a test using the [https://docs.rs/axum/latest/axum/index.html](Axum) web application framework. Tracing is also added to the application.
+This app is just a test using the [Axum](https://docs.rs/axum/latest/axum/index.html) web application framework. Tracing is also added to the application.
 
 Traces are being exported to jaeger and stdout.
 
