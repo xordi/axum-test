@@ -27,16 +27,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/", get(home_handler))
         .route_layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
 
-    axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
+    axum::Server::bind(&"0.0.0.0:8080".parse()?)
         .serve(app.into_make_service())
-        .await
-        .unwrap();
+        .await?;
 
     Ok(())
 }
 
 fn configure_tracing(service_name: impl Into<String>) -> Result<(), Box<dyn Error>> {
-    // Create a new OpenTelemetry trace pipeline that prints to stdout
     let otlp_exporter = opentelemetry_otlp::new_exporter()
         .tonic()
         .with_protocol(Protocol::Grpc)
@@ -55,11 +53,13 @@ fn configure_tracing(service_name: impl Into<String>) -> Result<(), Box<dyn Erro
         )
         .install_batch(opentelemetry::runtime::TokioCurrentThread)?;
 
-    // Create a tracing layer with the configured tracer
+    // Create two tracing layers, one for otlp wich pushes to the jaeger collector
+    // and the other which prints traces in stdout
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
     let fmt_layer = fmt::layer();
 
-    // Create the subscriber
+    // Init the subscriber
+    // RUST_LOG can be used to configure the tracing level (i.e. RUST_LOG=info)
     tracing_subscriber::registry()
         .with(telemetry)
         .with(fmt_layer)
